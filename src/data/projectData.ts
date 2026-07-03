@@ -106,19 +106,20 @@ export const filas_sintetico: {
     drive:  { n: 6351, tempo_medio_servico: 3.665, cv_servico: 0.698, atendentes_efetivos: 1 },
   },
   volume_hora: [
-    { hora: 10, balcao: 180, totem: 140 },
-    { hora: 11, balcao: 260, totem: 210 },
-    { hora: 12, balcao: 520, totem: 430 },
-    { hora: 13, balcao: 610, totem: 495 },
-    { hora: 14, balcao: 380, totem: 300 },
-    { hora: 15, balcao: 250, totem: 190 },
-    { hora: 16, balcao: 240, totem: 195 },
-    { hora: 17, balcao: 300, totem: 245 },
-    { hora: 18, balcao: 470, totem: 385 },
-    { hora: 19, balcao: 660, totem: 540 },
-    { hora: 20, balcao: 720, totem: 585 },
-    { hora: 21, balcao: 540, totem: 445 },
-    { hora: 22, balcao: 333, totem: 302 },
+    { hora: 10, balcao: 25.0, totem: 19.3 },
+    { hora: 11, balcao: 79.6, totem: 74.1 },
+    { hora: 12, balcao: 81.9, totem: 69.1 },
+    { hora: 13, balcao: 82.6, totem: 65.3 },
+    { hora: 14, balcao: 84.3, totem: 67.6 },
+    { hora: 15, balcao: 20.4, totem: 18.9 },
+    { hora: 16, balcao: 20.7, totem: 17.7 },
+    { hora: 17, balcao: 21.9, totem: 21.3 },
+    { hora: 18, balcao: 71.0, totem: 52.9 },
+    { hora: 19, balcao: 92.4, totem: 72.0 },
+    { hora: 20, balcao: 68.1, totem: 55.0 },
+    { hora: 21, balcao: 71.3, totem: 56.9 },
+    { hora: 22, balcao: 29.1, totem: 22.4 },
+    { hora: 23, balcao: 32.1, totem: 25.0 },
   ],
 };
 
@@ -144,30 +145,32 @@ function pertRow(
   };
 }
 
-// Times chosen so critical path A-B-G-H-M-Q-R-S-T-U-V sums ~79.67 with σ²≈17.44
+// McLanche Acarajé — lançamento regional. Caminho crítico: A-B-G-H-M-Q-R-S-T-U-V
+// ES/LS informados diretamente (batem com o CPM completo do relatório); duracao_min_dias
+// e custo_crash_dia calibrados para reproduzir a sequência de crashing de 24 iterações.
 export const pert_atividades: PertActivity[] = [
-  pertRow('A', 'Kickoff & alinhamento executivo', [],           2, 3, 5,   0.00, 0.00, 2, 800),
-  pertRow('B', 'Mapeamento AS-IS operações',      ['A'],        4, 6, 10,  3.17, 3.17, 4, 1200),
-  pertRow('C', 'Auditoria fornecedores',           ['A'],        3, 5, 8,   3.17, 12.00, 3, 900),
-  pertRow('D', 'Diagnóstico financeiro',           ['A'],        4, 6, 9,   3.17, 10.00, 4, 1000),
-  pertRow('E', 'Benchmark concorrência',           ['B'],        3, 4, 7,   9.50, 22.00, 3, 700),
-  pertRow('F', 'Pesquisa satisfação cliente',      ['B'],        4, 6, 9,   9.50, 20.50, 4, 850),
-  pertRow('G', 'Coleta cronoanálise filas',        ['B'],        5, 7, 10,  9.50, 9.50, 5, 1500),
-  pertRow('H', 'Modelagem M/M/s calibrada',        ['G'],        3, 5, 8,   16.67, 16.67, 3, 1400),
-  pertRow('I', 'Análise estoques 15 SKUs',         ['C'],        4, 6, 9,   8.17, 17.17, 4, 950),
-  pertRow('J', 'Curva ABC insumos',                ['C','I'],    2, 4, 6,   14.33, 23.33, 2, 600),
-  pertRow('K', 'Análise custo unitário',           ['D'],        3, 5, 7,   9.17, 16.17, 3, 800),
-  pertRow('L', 'Simulação cenários competitivos',  ['E','K'],    4, 6, 8,   13.50, 26.50, 4, 1100),
-  pertRow('M', 'PERT/CPM projeto de reforma',      ['H'],        5, 7, 11,  21.83, 21.83, 5, 2000),
-  pertRow('N', 'EOQ/EPQ política de estoque',      ['J'],        3, 5, 8,   18.50, 27.50, 3, 900),
-  pertRow('O', 'Teoria dos Jogos precificação',    ['F','L'],    3, 5, 7,   19.50, 32.50, 3, 850),
-  pertRow('P', 'Redesenho layout salão',           ['H'],        4, 7, 10,  21.83, 25.83, 4, 1600),
-  pertRow('Q', 'Plano de ação integrado',          ['M','N','O'],5, 8, 12,  29.00, 29.00, 5, 2500),
-  pertRow('R', 'Validação com franqueado',         ['Q'],        3, 5, 8,   37.17, 37.17, 3, 1300),
-  pertRow('S', 'Piloto operacional',               ['R','P'],    6, 9, 13,  42.33, 42.33, 6, 3200),
-  pertRow('T', 'Mensuração KPIs pós-piloto',       ['S'],        4, 6, 9,   51.50, 51.50, 4, 1800),
-  pertRow('U', 'Relatório executivo final',        ['T'],        5, 7, 10,  57.67, 57.67, 5, 2200),
-  pertRow('V', 'Apresentação board & handover',    ['U'],        10, 15, 21,64.83, 64.83, 8, 4500),
+  pertRow('A', 'Definição do produto e ficha técnica',        [],              5,  7,  12,  0.00,  0.00,  4.50, 2000.00),
+  pertRow('B', 'Aprovação corporativa do produto',             ['A'],           8, 10,  15,  7.50,  7.50,  8.50, 1500.00),
+  pertRow('C', 'Sourcing do fornecedor de acarajé/vatapá',     ['A'],          10, 14,  22,  7.50, 17.83, 14.67, 0),
+  pertRow('D', 'Testes de degustação interna',                 ['A'],           4,  6,   9,  7.50, 36.98,  6.17, 0),
+  pertRow('E', 'Definição de preço e margem',                  ['B','D'],       3,  4,   6, 18.00, 43.15,  4.17, 0),
+  pertRow('F', 'Negociação contrato fornecedor',                ['C'],           5,  8,  13, 22.17, 32.50,  8.33, 0),
+  pertRow('G', 'Compra de equipamento adicional (fritadeira)', ['B'],           7, 12,  20, 18.00, 18.00, 11.50, 3750.00),
+  pertRow('H', 'Adaptação física da cozinha',                  ['G'],           8, 10,  14, 30.50, 30.50,  7.33, 3333.33),
+  pertRow('I', 'Compra de embalagens customizadas',            ['E'],           6,  9,  14, 22.17, 58.83,  9.33, 0),
+  pertRow('J', 'Treinamento técnico dos cozinheiros',          ['F','H'],       6,  8,  12, 40.83, 48.33,  8.33, 0),
+  pertRow('K', 'Treinamento do balcão (totem, pedidos)',       ['E'],           3,  5,   8, 22.17, 48.32,  5.17, 0),
+  pertRow('L', 'Adaptação PDV / cardápio digital',             ['E'],           4,  6,   9, 22.17, 47.32,  6.17, 0),
+  pertRow('M', 'Validação sanitária ANVISA estadual',          ['F','H'],      10, 15,  25, 40.83, 40.83,  9.83, 1333.33),
+  pertRow('N', 'Produção dos materiais de marketing',          ['E'],           8, 11,  16, 22.17, 52.66, 11.33, 0),
+  pertRow('O', 'Distribuição dos materiais nas lojas',         ['N'],           3,  4,   6, 33.50, 63.99,  4.17, 0),
+  pertRow('P', 'Treinamento gerentes (storytelling)',          ['K','L'],       2,  3,   5, 28.34, 53.49,  3.17, 0),
+  pertRow('Q', 'Testes operacionais piloto (1 loja)',          ['J','M','P'],   4,  6,  10, 56.66, 56.66,  3.33, 2000.00),
+  pertRow('R', 'Ajustes pós-piloto',                            ['Q'],           3,  5,   8, 62.99, 62.99,  3.17, 2250.00),
+  pertRow('S', 'Pré-lançamento (soft opening)',                 ['R','I','O'],   2,  3,   5, 68.16, 68.16,  2.17, 3500.00),
+  pertRow('T', 'Análise de feedback soft opening',              ['S'],           2,  3,   4, 71.33, 71.33,  2.00, 1500.00),
+  pertRow('U', 'Ajustes finais',                                 ['T'],           2,  4,   7, 74.33, 74.33,  2.17, 1500.00),
+  pertRow('V', 'Lançamento oficial (Dia D)',                     ['U'],           1,  1,   2, 78.50, 78.50,  1.17, 10000.00),
 ];
 
 export const pert_meta = {
@@ -185,21 +188,21 @@ export const pert_meta = {
 
 // ---------- ESTOQUES (15 SKUs) ----------
 export const skus: SKU[] = [
-  { codigo: 'ALF-001', descricao: 'Alface americana (kg)',      D_anual: 3650, S_pedido: 45, H_unit_ano: 8,  validade_dias: 3,   categoria: 'PERIODO_FIXO',     abordagem: 'Pedidos diários — validade curta' },
-  { codigo: 'TOM-002', descricao: 'Tomate (kg)',                D_anual: 4380, S_pedido: 45, H_unit_ano: 7,  validade_dias: 5,   categoria: 'PERIODO_FIXO',     abordagem: 'Pedidos a cada 2 dias' },
-  { codigo: 'CEB-003', descricao: 'Cebola fatiada (kg)',        D_anual: 1825, S_pedido: 40, H_unit_ano: 6,  validade_dias: 4,   categoria: 'PERIODO_FIXO',     abordagem: 'Pedidos diários preparados' },
-  { codigo: 'PIC-004', descricao: 'Picles (kg)',                D_anual: 730,  S_pedido: 50, H_unit_ano: 4,  validade_dias: 45,  categoria: 'REVISAO_PERIODICA', abordagem: 'Revisão semanal' },
-  { codigo: 'PAO-005', descricao: 'Pão brioche (un)',           D_anual: 730000, S_pedido: 120, H_unit_ano: 0.05, validade_dias: 4, categoria: 'PERIODO_FIXO',   abordagem: 'Entregas diárias fornecedor' },
-  { codigo: 'CAR-006', descricao: 'Hambúrguer 45g (un)',        D_anual: 900000, S_pedido: 180, H_unit_ano: 0.08, validade_dias: 90, categoria: 'EOQ_CLASSICO', abordagem: 'EOQ clássico — congelado' },
-  { codigo: 'CAR-007', descricao: 'Hambúrguer 110g Angus (un)', D_anual: 180000, S_pedido: 180, H_unit_ano: 0.15, validade_dias: 90, categoria: 'EOQ_CLASSICO', abordagem: 'EOQ clássico — congelado' },
-  { codigo: 'BAT-008', descricao: 'Batata pré-frita (kg)',      D_anual: 21900, S_pedido: 150, H_unit_ano: 1.2, validade_dias: 180, categoria: 'EOQ_CLASSICO', abordagem: 'EOQ clássico — congelado' },
-  { codigo: 'QUE-009', descricao: 'Queijo cheddar (kg)',        D_anual: 5475,  S_pedido: 80,  H_unit_ano: 5,   validade_dias: 30, categoria: 'REVISAO_PERIODICA', abordagem: 'Revisão semanal — refrigerado' },
-  { codigo: 'BAC-010', descricao: 'Bacon (kg)',                 D_anual: 1825,  S_pedido: 80,  H_unit_ano: 6,   validade_dias: 20, categoria: 'PERIODO_FIXO',     abordagem: 'Pedidos frequentes' },
-  { codigo: 'MOL-011', descricao: 'Molho Big Mac (L)',          D_anual: 1460,  S_pedido: 60,  H_unit_ano: 3,   validade_dias: 60, categoria: 'REVISAO_PERIODICA', abordagem: 'Revisão quinzenal' },
-  { codigo: 'MOL-012', descricao: 'Ketchup (kg)',               D_anual: 2920,  S_pedido: 60,  H_unit_ano: 2,   validade_dias: 120, categoria: 'EOQ_CLASSICO',    abordagem: 'EOQ clássico — estável' },
-  { codigo: 'REF-013', descricao: 'Xarope refrigerante (L)',    D_anual: 10950, S_pedido: 90,  H_unit_ano: 1,   validade_dias: 90, categoria: 'PERIODO_FIXO',     abordagem: 'Volume alto — janela curta' },
-  { codigo: 'LEI-014', descricao: 'Leite UHT (L)',              D_anual: 5475,  S_pedido: 60,  H_unit_ano: 2,   validade_dias: 30, categoria: 'PERIODO_FIXO',     abordagem: 'Refrigerado — pedidos 3x/semana' },
-  { codigo: 'SOR-015', descricao: 'Base sorvete (kg)',          D_anual: 3650,  S_pedido: 70,  H_unit_ano: 3,   validade_dias: 60, categoria: 'REVISAO_PERIODICA', abordagem: 'Revisão semanal — congelado' },
+  { codigo: 'SKU-001', descricao: 'Hambúrguer 90/10 (cx 100un)',       D_anual: 1820, S_pedido: 25,  H_unit_ano: 22,   validade_dias: 5,   categoria: 'PERIODO_FIXO',     abordagem: 'Período Fixo' },
+  { codigo: 'SKU-002', descricao: 'Hambúrguer quarteirão (cx 60un)',   D_anual: 950,  S_pedido: 22,  H_unit_ano: 28,   validade_dias: 5,   categoria: 'PERIODO_FIXO',     abordagem: 'Período Fixo' },
+  { codigo: 'SKU-003', descricao: 'Pão Big Mac (pct 24un)',            D_anual: 2400, S_pedido: 18,  H_unit_ano: 18,   validade_dias: 7,   categoria: 'PERIODO_FIXO',     abordagem: 'Período Fixo' },
+  { codigo: 'SKU-004', descricao: 'Pão brioche premium (pct 24un)',    D_anual: 850,  S_pedido: 15,  H_unit_ano: 16,   validade_dias: 5,   categoria: 'PERIODO_FIXO',     abordagem: 'Período Fixo' },
+  { codigo: 'SKU-005', descricao: 'Pão padrão (pct 24un)',             D_anual: 3200, S_pedido: 18,  H_unit_ano: 15,   validade_dias: 7,   categoria: 'PERIODO_FIXO',     abordagem: 'Período Fixo' },
+  { codigo: 'SKU-006', descricao: 'Queijo cheddar fatiado (pct 1kg)',  D_anual: 1450, S_pedido: 60,  H_unit_ano: 12,   validade_dias: 30,  categoria: 'REVISAO_PERIODICA', abordagem: 'Revisão Periódica' },
+  { codigo: 'SKU-007', descricao: 'Bacon fatiado (pct 500g)',          D_anual: 780,  S_pedido: 80,  H_unit_ano: 14,   validade_dias: 21,  categoria: 'REVISAO_PERIODICA', abordagem: 'Revisão Periódica' },
+  { codigo: 'SKU-008', descricao: 'Alface americana (cx 5kg)',         D_anual: 950,  S_pedido: 12,  H_unit_ano: 18,   validade_dias: 4,   categoria: 'PERIODO_FIXO',     abordagem: 'Período Fixo' },
+  { codigo: 'SKU-009', descricao: 'Tomate italiano (cx 5kg)',          D_anual: 720,  S_pedido: 12,  H_unit_ano: 15,   validade_dias: 4,   categoria: 'PERIODO_FIXO',     abordagem: 'Período Fixo' },
+  { codigo: 'SKU-010', descricao: 'Cebola roxa fatiada (kg)',          D_anual: 480,  S_pedido: 40,  H_unit_ano: 14,   validade_dias: 7,   categoria: 'PERIODO_FIXO',     abordagem: 'Período Fixo' },
+  { codigo: 'SKU-011', descricao: 'Batata pré-frita McCain (cx 6×2,5kg)', D_anual: 2200, S_pedido: 220, H_unit_ano: 15, validade_dias: 90, categoria: 'EOQ_CLASSICO',    abordagem: 'EOQ Clássico' },
+  { codigo: 'SKU-012', descricao: 'Big Mac sauce (galão 4L)',          D_anual: 96,   S_pedido: 380, H_unit_ano: 22,   validade_dias: 60,  categoria: 'REVISAO_PERIODICA', abordagem: 'Revisão Periódica' },
+  { codigo: 'SKU-013', descricao: 'Ketchup (galão 4L)',                D_anual: 240,  S_pedido: 80,  H_unit_ano: 5.5,  validade_dias: 180, categoria: 'EOQ_CLASSICO',    abordagem: 'EOQ Clássico' },
+  { codigo: 'SKU-014', descricao: 'Mostarda amarela (galão 4L)',       D_anual: 180,  S_pedido: 80,  H_unit_ano: 5,    validade_dias: 180, categoria: 'EOQ_CLASSICO',    abordagem: 'EOQ Clássico' },
+  { codigo: 'SKU-015', descricao: 'Picles (balde 5L)',                 D_anual: 200,  S_pedido: 80,  H_unit_ano: 6.5,  validade_dias: 90,  categoria: 'REVISAO_PERIODICA', abordagem: 'Revisão Periódica' },
 ];
 
 // ---------- JOGOS ----------
@@ -207,48 +210,47 @@ export const jogos_cenarios: GameScenario[] = [
   {
     id: 'A',
     titulo: 'McDonald\'s × Burger King',
-    tipo: 'Dilema do Prisioneiro (guerra de preços)',
+    tipo: 'Dilema do Prisioneiro — promoção semanal de combos',
     jogador_linha: 'McDonald\'s',
     jogador_coluna: 'Burger King',
-    estrategias_linha: ['Manter Preço', 'Baixar Preço'],
-    estrategias_coluna: ['Manter Preço', 'Baixar Preço'],
-    // (Manter, Manter)=(80,80), (Manter,Baixar)=(40,95), (Baixar,Manter)=(95,40), (Baixar,Baixar)=(55,55)
+    estrategias_linha: ['Promoção', 'Preço cheio'],
+    estrategias_coluna: ['Promoção', 'Preço cheio'],
+    // (Promoção,Promoção)=(45,38) ★ NASH; (Promoção,Cheio)=(95,25); (Cheio,Promoção)=(28,88); (Cheio,Cheio)=(75,65)
     matrix: [
-      [[80, 80], [40, 95]],
-      [[95, 40], [55, 55]],
+      [[45, 38], [95, 25]],
+      [[28, 88], [75, 65]],
     ],
-    leitura: 'Ambos preferem baixar unilateralmente → equilíbrio subótimo (Baixar, Baixar). Clássico dilema: cooperar seria melhor mas é instável.',
+    leitura: 'Nash em (Promoção, Promoção) = (45, 38): dado que o rival promove, cada um prefere também promover (45>28 para o McD; 38>25 para o BK). Dilema clássico — (Preço cheio, Preço cheio)=(75,65) seria melhor para ambos, mas é instável.',
   },
   {
     id: 'B',
     titulo: 'McDonald\'s × Madero',
-    tipo: 'Dominância estrita — posicionamento premium',
+    tipo: 'Dominância estrita — posicionamento de preço',
     jogador_linha: 'McDonald\'s',
     jogador_coluna: 'Madero',
-    estrategias_linha: ['Manter R$22', 'Promo R$18'],
-    estrategias_coluna: ['Premium R$45', 'Desconto R$35'],
-    // (Manter, Premium)=(85,82), (Manter, Desc)=(72,95); (Promo, Premium)=(62,68), (Promo, Desc)=(38,82)
-    // McD: 85>62, 72>38 → domina "Manter". Madero: 95>82 e 82>68 → domina "Desconto".
+    estrategias_linha: ['Lançar premium R$35', 'Manter linha R$22'],
+    estrategias_coluna: ['Preço alto R$45', 'Desconto R$35'],
+    // (Premium,Alto)=(62,78); (Premium,Desc)=(38,95); (Manter,Alto)=(85,68); (Manter,Desc)=(72,82) ★ NASH
     matrix: [
-      [[85, 82], [72, 95]],
-      [[62, 68], [38, 82]],
+      [[62, 78], [38, 95]],
+      [[85, 68], [72, 82]],
     ],
-    leitura: 'Ambos jogadores possuem estratégia estritamente dominante. Resultado por dominância iterada: (Manter R$22, Desconto R$35) = (72, 82).',
+    leitura: 'Divergência com o gabarito do professor (que sugeria "sem Nash puro"). Por dominância estrita: McD "Manter R$22" domina "Premium" (85>62 e 72>38); Madero "Desconto R$35" domina "Preço alto" (95>78 e 82>68). IEDS leva a um Nash puro único: (Manter R$22, Desconto R$35) = (72, 82).',
   },
   {
     id: 'C',
     titulo: 'McDonald\'s × Subway',
-    tipo: 'Jogo de coordenação (foco de mercado)',
+    tipo: 'Jogo de coordenação — expansão do café da manhã',
     jogador_linha: 'McDonald\'s',
     jogador_coluna: 'Subway',
-    estrategias_linha: ['Foco Fast', 'Foco Saudável'],
-    estrategias_coluna: ['Foco Fast', 'Foco Saudável'],
-    // Coordenação: (Fast,Fast)=(70,30) McD ganha; (Saud,Saud)=(45,80) Subway ganha; cruzados baixos
+    estrategias_linha: ['Investir forte', 'Manter atual'],
+    estrategias_coluna: ['Investir forte', 'Manter atual'],
+    // (Investir,Investir)=(35,32); (Investir,Manter)=(78,18) ★ NASH 1; (Manter,Investir)=(15,85) ★ NASH 2; (Manter,Manter)=(52,50)
     matrix: [
-      [[70, 30], [50, 50]],
-      [[40, 55], [45, 80]],
+      [[35, 32], [78, 18]],
+      [[15, 85], [52, 50]],
     ],
-    leitura: 'Dois Nash puros: (Fast, Fast) e (Saudável, Saudável). Cada empresa prefere reforçar seu posicionamento nativo — não invadir o nicho do outro.',
+    leitura: 'O relatório aponta dois Nash puros — (Investir, Manter) e (Manter, Investir) — com first-mover advantage no café da manhã (6h–10h). Divergência: com esta matriz, Investir é dominante para os dois jogadores (ver análise crítica abaixo), e o Nash puro matemático é único: (Investir, Investir) = (35, 32).',
   },
 ];
 

@@ -6,10 +6,10 @@ import { Bot, Send, KeyRound, RefreshCcw, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/Badge';
 
 const QUICK_CARDS = [
-  { icon: '🔵', theme: 'Filas', question: 'Quantos atendentes recomenda para o totem no pico de jantar?' },
-  { icon: '🔴', theme: 'PERT',  question: 'Quais atividades do caminho crítico priorizar para crashing?' },
-  { icon: '🟡', theme: 'EOQ',   question: 'Por que EOQ clássico não serve para a alface?' },
-  { icon: '⚪', theme: 'Jogos', question: 'Qual estratégia de preço adotar frente ao Madero?' },
+  { icon: '🔵', theme: 'Filas', question: 'Quantos atendentes recomenda para o totem no pico de jantar, e qual o impacto esperado em Wq?' },
+  { icon: '🔴', theme: 'PERT',  question: 'Quais atividades do caminho crítico devem ser priorizadas para crashing e por quê?' },
+  { icon: '🟡', theme: 'EOQ',   question: 'O que acontece com o custo total se o custo de manutenção (H) subir 20% no SKU de carne?' },
+  { icon: '⚪', theme: 'Jogos', question: 'Qual estratégia de preço a unidade deveria adotar frente ao Madero, com base no equilíbrio de Nash?' },
 ];
 
 const QUICK_PILLS = [

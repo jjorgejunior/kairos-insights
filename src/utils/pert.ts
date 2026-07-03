@@ -59,7 +59,7 @@ export function runCrashing(
     if (!candidate) break;
     iter++;
     const before = duration;
-    candidate.current -= 1;
+    candidate.current = +(candidate.current - 1).toFixed(2);
     duration = +(duration - 1).toFixed(2);
     spent = +(spent + candidate.custo).toFixed(2);
     log.push({

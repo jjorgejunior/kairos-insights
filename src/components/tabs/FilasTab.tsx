@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid, LineChart, Line, ReferenceLine, Cell,
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid, LineChart, Line, ReferenceLine, Cell, LabelList,
 } from 'recharts';
 import { PROJECT_DATA } from '@/data/projectData';
 import { calcMMs } from '@/utils/queuing';
@@ -32,14 +32,15 @@ export function FilasTab() {
 
   const { filas_campo, filas_sintetico } = PROJECT_DATA;
 
-  // KPIs live
+  // KPIs live — atendentes por canal (2 balcão, 4 totem) valem tanto para campo quanto sintético,
+  // pois refletem a estrutura física dos postos de atendimento, não a fonte do dado.
   const kpiLambda = fonte === 'campo'
     ? PROJECT_DATA.lambda_campo_media
-    : (60 / filas_sintetico.resumo_canais[canal].tempo_medio_servico) * filas_sintetico.resumo_canais[canal].atendentes_efetivos * 0.7;
+    : filas_sintetico.volume_hora.find((v) => v.hora === 19)![canal];
   const kpiMu = fonte === 'campo'
     ? filas_campo.servico.mu_hora
     : 60 / filas_sintetico.resumo_canais[canal].tempo_medio_servico;
-  const kpiS = fonte === 'campo' ? filas_campo.s_atendentes : filas_sintetico.resumo_canais[canal].atendentes_efetivos;
+  const kpiS = filas_sintetico.resumo_canais[canal].atendentes_efetivos;
   const kpi = useMemo(() => calcMMs(kpiLambda, kpiMu, kpiS), [kpiLambda, kpiMu, kpiS]);
 
   // Chart A: Wq teórico vs observado por canal (sintético) — observado é aproximado do CV
@@ -61,15 +62,18 @@ export function FilasTab() {
     cv: filas_sintetico.resumo_canais[c].cv_servico,
   }));
 
-  // Sessões field: bar λ + linha capacidade máx
+  // Sessões field: bar λ + linha capacidade máx — capacidade ATUAL observada (s=2),
+  // antes da recomendação de acrescentar um 3º atendente no pico de jantar.
+  const SESSION_S = 2;
+  const sessionCapacidade = SESSION_S * filas_campo.servico.mu_hora;
   const sessoesData = filas_campo.sessoes.map((s0) => {
-    const wq = calcMMs(s0.lambda_hora, filas_campo.servico.mu_hora, filas_campo.s_atendentes);
-    const wqSec = wq.unstable ? 9999 : wq.Wq * 3600;
+    const wq = calcMMs(s0.lambda_hora, filas_campo.servico.mu_hora, SESSION_S);
     return {
       sessao: s0.id,
       lambda: s0.lambda_hora,
-      capacidade: filas_campo.s_atendentes * filas_campo.servico.mu_hora,
-      wq: +wqSec.toFixed(1),
+      capacidade: sessionCapacidade,
+      wq: wq.unstable ? 0 : +(wq.Wq * 3600).toFixed(1),
+      unstable: wq.unstable,
     };
   });
 
@@ -157,8 +161,12 @@ export function FilasTab() {
               <XAxis dataKey="sessao" stroke={AXIS} />
               <YAxis stroke={AXIS} />
               <Tooltip {...tooltipStyle} />
-              <ReferenceLine y={sessoesData[0].capacidade} stroke="#c9952c" strokeDasharray="4 2" label={{ value: `Capacidade máx = s·μ = ${sessoesData[0].capacidade.toFixed(1)}/h`, fill: '#e8c373', fontSize: 11 }} />
-              <Bar dataKey="lambda" name="λ observado" fill="#b3122e" />
+              <ReferenceLine y={sessionCapacidade} stroke="#c9952c" strokeDasharray="4 2" label={{ value: `Capacidade máx (s=${SESSION_S})`, fill: '#e8c373', fontSize: 11 }} />
+              <Bar dataKey="lambda" name="λ observado">
+                {sessoesData.map((d, i) => (
+                  <Cell key={i} fill={d.lambda > d.capacidade ? '#b3122e' : '#c9952c'} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -168,11 +176,24 @@ export function FilasTab() {
               <CartesianGrid stroke={CHART_GRID} strokeDasharray="3 3" />
               <XAxis dataKey="sessao" stroke={AXIS} />
               <YAxis stroke={AXIS} />
-              <Tooltip {...tooltipStyle} />
+              <Tooltip {...tooltipStyle} formatter={(v: number, _n: string, p: any) => p?.payload?.unstable ? ['Instável (ρ≥1)', 'Wq (s)'] : [v, 'Wq (s)']} />
               <Bar dataKey="wq" name="Wq (s)">
                 {sessoesData.map((d, i) => (
-                  <Cell key={i} fill={d.wq < 60 ? '#3a9c6f' : d.wq < 120 ? '#d4a237' : '#b3122e'} />
+                  <Cell key={i} fill={d.unstable ? '#b3122e' : '#3a9c6f'} />
                 ))}
+                <LabelList
+                  dataKey="unstable"
+                  content={({ x, y, width, index }) => {
+                    const d = sessoesData[index as number];
+                    if (!d.unstable) return null;
+                    const cx = Number(x) + Number(width) / 2;
+                    return (
+                      <text x={cx} y={Number(y) - 6} textAnchor="middle" fill="#ef6b80" fontSize={11} fontWeight={600}>
+                        Instável (ρ≥1)
+                      </text>
+                    );
+                  }}
+                />
               </Bar>
             </BarChart>
           </ResponsiveContainer>

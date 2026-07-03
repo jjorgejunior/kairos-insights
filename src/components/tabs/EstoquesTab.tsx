@@ -40,7 +40,7 @@ export function EstoquesTab() {
   const fixCount = rows.filter((r) => r.categoria === 'PERIODO_FIXO').length;
   const violaCount = rows.filter((r) => r.viola).length;
 
-  const [selectedCode, setSelectedCode] = useState(skus[5].codigo);
+  const [selectedCode, setSelectedCode] = useState(skus[7].codigo);
   const selected = rows.find((r) => r.codigo === selectedCode)!;
 
   // Sensitivity sliders

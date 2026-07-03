@@ -124,13 +124,64 @@ export function JogosTab() {
         </div>
       </div>
 
-      {/* Special: Scenario B — critical analysis */}
-      {scenario.id === 'B' && (
+      {/* Special: Scenario A — Dilema do Prisioneiro analysis */}
+      {scenario.id === 'A' && (
+        <div className="card-elevated p-5 border-l-4 border-l-[color:var(--amber)] space-y-4">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="text-[color:var(--amber)]" size={18} />
+            <h3 className="text-lg font-semibold text-[color:var(--gold-light)]">Análise — Dilema do Prisioneiro</h3>
+          </div>
+          <p className="text-sm text-[color:var(--slate-light)]">
+            O Nash em (Promoção, Promoção) = (45, 38) é matematicamente correto, mas coletivamente subótimo: se ambos
+            cooperassem e mantivessem preço cheio, obteriam (75, 65) — melhor para os dois. O problema é que esse
+            resultado cooperativo é instável: qualquer um tem incentivo unilateral para desviar e promover, capturando
+            95 enquanto o rival fica com 25.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-lg p-4 bg-[color:var(--bg-panel-2)] border border-[color:var(--border-subtle)]">
+              <h4 className="text-xs uppercase text-[color:var(--slate)] tracking-wider mb-2">Desvio do McD (dado BK em Preço cheio)</h4>
+              <p className="text-sm text-[color:var(--slate-light)]">
+                Promover: <span className="kpi-value text-[color:var(--crimson-soft)] font-bold">95</span> vs Manter:{' '}
+                <span className="kpi-value text-[color:var(--slate-light)] font-bold">75</span>
+              </p>
+              <p className="text-xs text-[color:var(--slate)] mt-1">→ incentivo para desviar</p>
+            </div>
+            <div className="rounded-lg p-4 bg-[color:var(--bg-panel-2)] border border-[color:var(--border-subtle)]">
+              <h4 className="text-xs uppercase text-[color:var(--slate)] tracking-wider mb-2">Desvio do BK (dado McD em Preço cheio)</h4>
+              <p className="text-sm text-[color:var(--slate-light)]">
+                Promover: <span className="kpi-value text-[color:var(--crimson-soft)] font-bold">88</span> vs Manter:{' '}
+                <span className="kpi-value text-[color:var(--slate-light)] font-bold">65</span>
+              </p>
+              <p className="text-xs text-[color:var(--slate)] mt-1">→ incentivo para desviar</p>
+            </div>
+          </div>
+          <div className="p-4 rounded-lg bg-[color:var(--amber)]/10 border border-[color:var(--amber)]/30">
+            <p className="text-sm text-[color:var(--slate-light)]">
+              <strong className="text-[color:var(--gold-light)]">Equilíbrio estável mas ineficiente.</strong> A solução
+              cooperativa (Preço cheio, Preço cheio) = (75, 65) só é sustentável com coordenação explícita ou repetição
+              do jogo — o que pode ocorrer naturalmente em mercados com poucos players e interação frequente (teoria
+              dos jogos repetidos).
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Special: Scenarios B and C — critical analysis via dominance */}
+      {(scenario.id === 'B' || scenario.id === 'C') && (
         <div className="card-elevated p-5 border-l-4 border-l-[color:var(--amber)] space-y-4">
           <div className="flex items-center gap-2">
             <AlertTriangle className="text-[color:var(--amber)]" size={18} />
             <h3 className="text-lg font-semibold text-[color:var(--gold-light)]">Análise Crítica — Reavaliação do Equilíbrio</h3>
           </div>
+          {scenario.id === 'C' && (
+            <p className="text-sm text-[color:var(--slate-light)]">
+              O relatório descreve este cenário como um jogo de coordenação com <strong>dois</strong> equilíbrios de Nash puros —
+              (Investir, Manter) e (Manter, Investir) — sustentando o argumento de first-mover advantage. A análise de dominância
+              abaixo diverge dessa leitura: com esta matriz de payoffs, <strong>Investir forte é estratégia estritamente dominante
+              para os dois jogadores</strong>, o que torna este um Dilema do Prisioneiro disfarçado, não um jogo de coordenação.
+              O único Nash puro matematicamente válido é (Investir, Investir).
+            </p>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="rounded-lg p-4 bg-[color:var(--bg-panel-2)] border border-[color:var(--border-subtle)]">
               <h4 className="text-sm font-semibold text-[color:var(--slate-light)] mb-2">Dominância — {scenario.jogador_linha}</h4>

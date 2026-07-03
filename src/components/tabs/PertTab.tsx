@@ -39,7 +39,7 @@ export function PertTab() {
   }, [pert_meta]);
 
   // Crashing
-  const [budget, setBudget] = useState(20000);
+  const [budget, setBudget] = useState(50000);
   const crashing = useMemo(
     () => runCrashing(pert_atividades, budget, pert_meta.duracao_total),
     [pert_atividades, budget, pert_meta.duracao_total],
@@ -53,6 +53,22 @@ export function PertTab() {
     });
     return pts;
   }, [crashing, pert_meta.duracao_total]);
+
+  // Segment annotations: which activity is being crashed at each budget range,
+  // derived from the actual crashing log so it stays correct if the budget changes.
+  const crashAnnotations = useMemo(() => {
+    const marks: { x: number; atividade: string }[] = [];
+    let lastAtividade: string | null = null;
+    let segmentStart = 0;
+    crashing.log.forEach((step) => {
+      if (step.atividade !== lastAtividade) {
+        marks.push({ x: segmentStart, atividade: step.atividade });
+        lastAtividade = step.atividade;
+      }
+      segmentStart = step.gasto_acumulado;
+    });
+    return marks;
+  }, [crashing]);
 
   // Gantt data — sorted by ES
   const gantt = useMemo(() =>
@@ -214,11 +230,20 @@ export function PertTab() {
         <div>
           <h4 className="text-xs uppercase text-[color:var(--slate)] mb-2">Curva Custo × Duração</h4>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={crashCurve}>
+            <LineChart data={crashCurve} margin={{ top: 20 }}>
               <CartesianGrid stroke={CHART_GRID} strokeDasharray="3 3" />
               <XAxis dataKey="gasto" stroke={AXIS} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`} />
               <YAxis stroke={AXIS} domain={['auto','auto']} />
               <Tooltip {...tooltipStyle} formatter={(v: number) => v.toFixed(2)} />
+              {crashAnnotations.map((m) => (
+                <ReferenceLine
+                  key={`${m.atividade}-${m.x}`}
+                  x={m.x}
+                  stroke={CHART_GRID}
+                  strokeDasharray="3 3"
+                  label={{ value: m.atividade, position: 'top', fill: '#c9952c', fontSize: 11 }}
+                />
+              ))}
               <Line type="stepAfter" dataKey="duracao" name="Duração (d)" stroke="#c9952c" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
