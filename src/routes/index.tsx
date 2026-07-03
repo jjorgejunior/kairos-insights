@@ -1,24 +1,31 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useAppStore } from "@/store/useAppStore";
+import { Header } from "@/components/Header";
+import { FilasTab } from "@/components/tabs/FilasTab";
+import { PertTab } from "@/components/tabs/PertTab";
+import { EstoquesTab } from "@/components/tabs/EstoquesTab";
+import { JogosTab } from "@/components/tabs/JogosTab";
+import { CopilotoTab } from "@/components/tabs/CopilotoTab";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  component: Dashboard,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Dashboard() {
+  const activeTab = useAppStore((s) => s.activeTab);
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="min-h-screen bg-[color:var(--bg-carbon)]">
+      <Header />
+      <main className="max-w-[1400px] mx-auto px-6 py-6">
+        {activeTab === 'filas' && <FilasTab />}
+        {activeTab === 'pert' && <PertTab />}
+        {activeTab === 'estoques' && <EstoquesTab />}
+        {activeTab === 'jogos' && <JogosTab />}
+        {activeTab === 'copiloto' && <CopilotoTab />}
+      </main>
+      <footer className="max-w-[1400px] mx-auto px-6 py-6 text-center text-xs text-[color:var(--slate)]/60 no-print">
+        Kairos Consulting · Pesquisa Operacional II · Dashboard interno
+      </footer>
     </div>
   );
 }
