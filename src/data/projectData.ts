@@ -11,6 +11,7 @@ export interface FieldSession {
   lambda_min: number;
   lambda_hora: number;
   cv: number;
+  s_atendentes: number; // atendentes no balcão durante esta visita específica
 }
 
 export interface FieldService {
@@ -81,17 +82,21 @@ export const filas_campo: {
   sessoes: FieldSession[];
   servico: FieldService;
   s_atendentes: number;
+  atendentes_por_canal: { balcao: number; totem: number };
 } = {
   sessoes: [
     { id: 'S1', data: '2026-06-11', dia: 'Quinta', periodo: 'Pico Jantar',
-      n: 20, duracao_min: 52, lambda_min: 0.365, lambda_hora: 21.9, cv: 0.96 },
+      n: 20, duracao_min: 52, lambda_min: 0.365, lambda_hora: 21.9, cv: 0.96, s_atendentes: 2 },
     { id: 'S2', data: '2026-06-14', dia: 'Domingo', periodo: 'Vale Tarde/Jantar',
-      n: 40, duracao_min: 169, lambda_min: 0.231, lambda_hora: 13.8, cv: 0.94 },
+      n: 40, duracao_min: 169, lambda_min: 0.231, lambda_hora: 13.8, cv: 0.94, s_atendentes: 2 },
     { id: 'S3', data: '2026-06-17', dia: 'Quarta', periodo: 'Pico Jantar',
-      n: 19, duracao_min: 46, lambda_min: 0.391, lambda_hora: 23.5, cv: 0.79 },
+      n: 19, duracao_min: 46, lambda_min: 0.391, lambda_hora: 23.5, cv: 0.79, s_atendentes: 4 },
   ],
   servico: { n: 79, media_min: 7.898, mu_hora: 7.597, cv: 0.365 },
   s_atendentes: 3,
+  // Contagem real observada no Salvador Shopping (distinta da loja-piloto sintética
+  // usada para calibração de CV/tempo de serviço, que tem 2 balcão / 4 totem).
+  atendentes_por_canal: { balcao: 4, totem: 5 },
 };
 
 export const lambda_campo_media = 19.7; // /h

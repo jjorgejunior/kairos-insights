@@ -32,15 +32,17 @@ export function FilasTab() {
 
   const { filas_campo, filas_sintetico } = PROJECT_DATA;
 
-  // KPIs live — atendentes por canal (2 balcão, 4 totem) valem tanto para campo quanto sintético,
-  // pois refletem a estrutura física dos postos de atendimento, não a fonte do dado.
+  // KPIs live — campo usa a contagem real do Salvador Shopping (4 balcão / 5 totem);
+  // sintético usa a estrutura da loja-piloto de calibração (2 balcão / 4 totem).
   const kpiLambda = fonte === 'campo'
     ? PROJECT_DATA.lambda_campo_media
     : filas_sintetico.volume_hora.find((v) => v.hora === 19)![canal];
   const kpiMu = fonte === 'campo'
     ? filas_campo.servico.mu_hora
     : 60 / filas_sintetico.resumo_canais[canal].tempo_medio_servico;
-  const kpiS = filas_sintetico.resumo_canais[canal].atendentes_efetivos;
+  const kpiS = fonte === 'campo'
+    ? filas_campo.atendentes_por_canal[canal]
+    : filas_sintetico.resumo_canais[canal].atendentes_efetivos;
   const kpi = useMemo(() => calcMMs(kpiLambda, kpiMu, kpiS), [kpiLambda, kpiMu, kpiS]);
 
   // Chart A: Wq teórico vs observado por canal (sintético) — observado é aproximado do CV
@@ -62,16 +64,15 @@ export function FilasTab() {
     cv: filas_sintetico.resumo_canais[c].cv_servico,
   }));
 
-  // Sessões field: bar λ + linha capacidade máx — capacidade ATUAL observada (s=2),
-  // antes da recomendação de acrescentar um 3º atendente no pico de jantar.
-  const SESSION_S = 2;
-  const sessionCapacidade = SESSION_S * filas_campo.servico.mu_hora;
+  // Sessões field: bar λ + linha capacidade máx — cada visita teve uma escala diferente
+  // (S1 e S2: 2 atendentes; S3, última visita: 4 atendentes).
   const sessoesData = filas_campo.sessoes.map((s0) => {
-    const wq = calcMMs(s0.lambda_hora, filas_campo.servico.mu_hora, SESSION_S);
+    const wq = calcMMs(s0.lambda_hora, filas_campo.servico.mu_hora, s0.s_atendentes);
     return {
       sessao: s0.id,
       lambda: s0.lambda_hora,
-      capacidade: sessionCapacidade,
+      s: s0.s_atendentes,
+      capacidade: s0.s_atendentes * filas_campo.servico.mu_hora,
       wq: wq.unstable ? 0 : +(wq.Wq * 3600).toFixed(1),
       unstable: wq.unstable,
     };
@@ -159,9 +160,10 @@ export function FilasTab() {
             <BarChart data={sessoesData}>
               <CartesianGrid stroke={CHART_GRID} strokeDasharray="3 3" />
               <XAxis dataKey="sessao" stroke={AXIS} />
-              <YAxis stroke={AXIS} />
-              <Tooltip {...tooltipStyle} />
-              <ReferenceLine y={sessionCapacidade} stroke="#c9952c" strokeDasharray="4 2" label={{ value: `Capacidade máx (s=${SESSION_S})`, fill: '#e8c373', fontSize: 11 }} />
+              <YAxis stroke={AXIS} domain={[0, Math.ceil(4 * filas_campo.servico.mu_hora) + 4]} />
+              <Tooltip {...tooltipStyle} formatter={(v: number, _n: string, p: any) => [v, `λ observado (s=${p?.payload?.s})`]} />
+              <ReferenceLine y={2 * filas_campo.servico.mu_hora} stroke="#c9952c" strokeDasharray="4 2" label={{ value: 'Capacidade (s=2)', fill: '#e8c373', fontSize: 11 }} />
+              <ReferenceLine y={4 * filas_campo.servico.mu_hora} stroke="#3a9c6f" strokeDasharray="4 2" label={{ value: 'Capacidade (s=4)', fill: '#3a9c6f', fontSize: 11, position: 'insideTopRight' }} />
               <Bar dataKey="lambda" name="λ observado">
                 {sessoesData.map((d, i) => (
                   <Cell key={i} fill={d.lambda > d.capacidade ? '#b3122e' : '#c9952c'} />
