@@ -146,11 +146,9 @@ export function CopilotoScreen() {
     setError(null);
     try {
       const reply = await sendMessage({
-        data: {
-          history: chat.map((m) => ({ role: m.role, content: m.content })),
-          userMessage: text,
-          systemPrompt: buildSystemPrompt(client),
-        },
+        history: chat.map((m) => ({ role: m.role, content: m.content })),
+        userMessage: text,
+        systemPrompt: buildSystemPrompt(client),
       });
       setChat(client.id, [...history, { role: "model", content: reply, t: Date.now() }]);
     } catch (e) {

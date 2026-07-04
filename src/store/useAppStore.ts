@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { CLIENTS, type ThemeMode } from "@/data/clients";
+import type { ThemeMode } from "@/data/clients";
 
 export interface ChatMessage {
   role: "user" | "model";
@@ -18,15 +18,16 @@ export type PrintScope = "section" | "all";
 const LS_THEMES = "kairos-themes";
 
 function seedThemes(): Record<string, ThemeMode> {
-  const base: Record<string, ThemeMode> = {};
-  for (const id of Object.keys(CLIENTS)) base[id] = CLIENTS[id].theme;
+  // Per-client theme overrides, persisted client-side. Falls back to each
+  // client's own `theme` default (see Sidebar: `themes[id] ?? client.theme`)
+  // when there's no override yet, so no upfront client list fetch is needed.
   try {
     const saved = JSON.parse(localStorage.getItem(LS_THEMES) || "null");
-    if (saved && typeof saved === "object") return { ...base, ...saved };
+    if (saved && typeof saved === "object") return saved as Record<string, ThemeMode>;
   } catch {
     /* ignore */
   }
-  return base;
+  return {};
 }
 
 interface AppStore {

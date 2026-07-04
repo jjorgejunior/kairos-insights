@@ -14,7 +14,472 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          id: string
+          cliente: string
+          short: string
+          local: string
+          initial: string
+          industry: string
+          periodo: string
+          autor: string
+          version: string
+          theme: string
+          headline: string
+          resumo: string
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          cliente: string
+          short: string
+          local: string
+          initial: string
+          industry: string
+          periodo: string
+          autor: string
+          version: string
+          theme: string
+          headline: string
+          resumo: string
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          cliente?: string
+          short?: string
+          local?: string
+          initial?: string
+          industry?: string
+          periodo?: string
+          autor?: string
+          version?: string
+          theme?: string
+          headline?: string
+          resumo?: string
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      recomendacoes: {
+        Row: {
+          id: string
+          client_id: string
+          frente: string
+          tag: string
+          accent: string
+          titulo: string
+          corpo: string
+          impacto_num: string
+          impacto_lbl: string
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          frente: string
+          tag: string
+          accent: string
+          titulo: string
+          corpo: string
+          impacto_num: string
+          impacto_lbl: string
+        }
+        Update: {
+          id?: string
+          client_id?: string
+          frente?: string
+          tag?: string
+          accent?: string
+          titulo?: string
+          corpo?: string
+          impacto_num?: string
+          impacto_lbl?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recomendacoes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      filas_canais: {
+        Row: {
+          id: string
+          client_id: string
+          key: string
+          label: string
+          lambda: number
+          mu: number
+          s: number
+          sort_order: number
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          key: string
+          label: string
+          lambda: number
+          mu: number
+          s: number
+          sort_order?: number
+        }
+        Update: {
+          id?: string
+          client_id?: string
+          key?: string
+          label?: string
+          lambda?: number
+          mu?: number
+          s?: number
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filas_canais_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      filas_volume: {
+        Row: {
+          id: string
+          client_id: string
+          hora: number
+          canal_key: string
+          valor: number
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          hora: number
+          canal_key: string
+          valor: number
+        }
+        Update: {
+          id?: string
+          client_id?: string
+          hora?: number
+          canal_key?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filas_volume_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      filas_sim: {
+        Row: {
+          client_id: string
+          lambda: number
+          s: number
+          service_min: number
+        }
+        Insert: {
+          client_id: string
+          lambda: number
+          s: number
+          service_min: number
+        }
+        Update: {
+          client_id?: string
+          lambda?: number
+          s?: number
+          service_min?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filas_sim_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pert_config: {
+        Row: {
+          client_id: string
+          deadline: number
+          budget: number
+        }
+        Insert: {
+          client_id: string
+          deadline: number
+          budget: number
+        }
+        Update: {
+          client_id?: string
+          deadline?: number
+          budget?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pert_config_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pert_atividades: {
+        Row: {
+          id: string
+          client_id: string
+          codigo: string
+          descricao: string
+          predecessoras: string[]
+          o: number
+          m: number
+          p: number
+          es: number
+          ls: number
+          floor: number | null
+          crash_cost: number
+          sort_order: number
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          codigo: string
+          descricao: string
+          predecessoras?: string[]
+          o: number
+          m: number
+          p: number
+          es: number
+          ls: number
+          floor?: number | null
+          crash_cost?: number
+          sort_order?: number
+        }
+        Update: {
+          id?: string
+          client_id?: string
+          codigo?: string
+          descricao?: string
+          predecessoras?: string[]
+          o?: number
+          m?: number
+          p?: number
+          es?: number
+          ls?: number
+          floor?: number | null
+          crash_cost?: number
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pert_atividades_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estoque_config: {
+        Row: {
+          client_id: string
+          selected_sku: string
+        }
+        Insert: {
+          client_id: string
+          selected_sku: string
+        }
+        Update: {
+          client_id?: string
+          selected_sku?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estoque_config_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estoque_skus: {
+        Row: {
+          id: string
+          client_id: string
+          codigo: string
+          descricao: string
+          d_anual: number
+          s_pedido: number
+          h_unit_ano: number
+          validade_dias: number
+          categoria: string
+          sort_order: number
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          codigo: string
+          descricao: string
+          d_anual: number
+          s_pedido: number
+          h_unit_ano: number
+          validade_dias: number
+          categoria: string
+          sort_order?: number
+        }
+        Update: {
+          id?: string
+          client_id?: string
+          codigo?: string
+          descricao?: string
+          d_anual?: number
+          s_pedido?: number
+          h_unit_ano?: number
+          validade_dias?: number
+          categoria?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estoque_skus_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jogos_config: {
+        Row: {
+          client_id: string
+          selected_index: number
+          precos_campo_players: string[] | null
+          precos_campo_label: string | null
+        }
+        Insert: {
+          client_id: string
+          selected_index?: number
+          precos_campo_players?: string[] | null
+          precos_campo_label?: string | null
+        }
+        Update: {
+          client_id?: string
+          selected_index?: number
+          precos_campo_players?: string[] | null
+          precos_campo_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jogos_config_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jogos_cenarios: {
+        Row: {
+          id: string
+          client_id: string
+          cenario_id: string
+          titulo: string
+          tipo: string
+          linha: string
+          coluna: string
+          est_linha: string[]
+          est_coluna: string[]
+          matrix: Json
+          leitura: string
+          sort_order: number
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          cenario_id: string
+          titulo: string
+          tipo: string
+          linha: string
+          coluna: string
+          est_linha: string[]
+          est_coluna: string[]
+          matrix: Json
+          leitura: string
+          sort_order?: number
+        }
+        Update: {
+          id?: string
+          client_id?: string
+          cenario_id?: string
+          titulo?: string
+          tipo?: string
+          linha?: string
+          coluna?: string
+          est_linha?: string[]
+          est_coluna?: string[]
+          matrix?: Json
+          leitura?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jogos_cenarios_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jogos_precos_campo: {
+        Row: {
+          id: string
+          client_id: string
+          categoria: string
+          precos: Json
+          sort_order: number
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          categoria: string
+          precos: Json
+          sort_order?: number
+        }
+        Update: {
+          id?: string
+          client_id?: string
+          categoria?: string
+          precos?: Json
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jogos_precos_campo_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

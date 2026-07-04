@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import type { ClientConfig, Section } from "@/data/clients";
-import { CLIENTS, CLIENT_ORDER } from "@/data/clients";
+import { fetchClientList } from "@/data/supabaseClients";
 import { useAppStore } from "@/store/useAppStore";
 import { calcEOQ, daysToConsume } from "@/utils/eoq";
 
@@ -24,6 +25,7 @@ function violaCountFor(client: ClientConfig): number {
 
 export function Sidebar({ client, section }: { client: ClientConfig; section: Section }) {
   const navigate = useNavigate();
+  const { data: clientList = [] } = useQuery({ queryKey: ["clientList"], queryFn: fetchClientList });
   const setLoading = useAppStore((s) => s.setLoading);
   const theme = useAppStore((s) => s.themes[client.id] ?? client.theme);
   const toggleTheme = useAppStore((s) => s.toggleTheme);
@@ -156,8 +158,8 @@ export function Sidebar({ client, section }: { client: ClientConfig; section: Se
         >
           ENGAJAMENTO ATIVO
         </div>
-        {CLIENT_ORDER.map((k) => {
-          const pr = CLIENTS[k];
+        {clientList.map((pr) => {
+          const k = pr.id;
           const active = k === client.id;
           return (
             <button

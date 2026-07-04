@@ -1,8 +1,9 @@
 // Gemini API service — system prompt built entirely from derived client data
-// (nothing hardcoded) + a server-only sendMessage that keeps GEMINI_API_KEY
-// off the client (never in the URL, headers, or JS bundle).
+// (nothing hardcoded) + a sendMessage that calls the "gemini-chat" Supabase
+// edge function. GEMINI_API_KEY lives only in Supabase secrets (Lovable
+// Cloud) and never reaches the browser — not in the URL, headers, or bundle.
 
-import { createServerFn } from "@tanstack/react-start";
+import { supabase } from "@/integrations/supabase/client";
 import type { ClientConfig } from "@/data/clients";
 import { toRawActivities } from "@/data/clients";
 import { derivePert, runCrashing } from "@/utils/pert";
@@ -55,65 +56,21 @@ interface SendMessageInput {
 }
 
 /**
- * Server function: sends a chat turn to Gemini. Runs only on the server —
- * GEMINI_API_KEY is read from process.env and never reaches the browser.
+ * Calls the "gemini-chat" Supabase edge function, which holds GEMINI_API_KEY
+ * as a server-side secret and proxies the call to Gemini.
  */
-export const sendMessage = createServerFn({ method: "POST" })
-  .validator((data: SendMessageInput) => data)
-  .handler(async ({ data }): Promise<string> => {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error(
-        "GEMINI_API_KEY não configurada no servidor. Defina a variável de ambiente na hospedagem.",
-      );
-    }
+export async function sendMessage({
+  history,
+  userMessage,
+  systemPrompt,
+}: SendMessageInput): Promise<string> {
+  const { data, error } = await supabase.functions.invoke<{ text?: string; error?: string }>(
+    "gemini-chat",
+    { body: { history, userMessage, systemPrompt } },
+  );
 
-    const { history, userMessage, systemPrompt } = data;
-    const contents = [
-      ...history.map((m) => ({ role: m.role, parts: [{ text: m.content }] })),
-      { role: "user", parts: [{ text: userMessage }] },
-    ];
-
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
-
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 30000);
-
-    try {
-      let res: Response;
-      try {
-        res = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents,
-            systemInstruction: { parts: [{ text: systemPrompt }] },
-          }),
-          signal: controller.signal,
-        });
-      } catch (e) {
-        if (e instanceof Error && e.name === "AbortError") {
-          throw new Error("Tempo de resposta esgotado. Tente reenviar.");
-        }
-        throw e;
-      }
-
-      if (res.status === 401 || res.status === 403) {
-        throw new Error("Chave da API Gemini inválida ou sem permissão no servidor.");
-      }
-      if (res.status === 429) {
-        throw new Error("Cota da API Gemini excedida. Tente novamente mais tarde.");
-      }
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`Erro Gemini (${res.status}): ${text.slice(0, 200)}`);
-      }
-
-      const resData = await res.json();
-      const text = resData?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!text) throw new Error("Resposta vazia da Gemini.");
-      return text as string;
-    } finally {
-      clearTimeout(timer);
-    }
-  });
+  if (error) throw new Error(error.message || "Falha ao contatar o copiloto.");
+  if (data?.error) throw new Error(data.error);
+  if (!data?.text) throw new Error("Resposta vazia da Gemini.");
+  return data.text;
+}
