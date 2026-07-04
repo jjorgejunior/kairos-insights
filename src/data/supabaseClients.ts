@@ -112,7 +112,8 @@ export async function fetchClientConfig(id: string): Promise<ClientConfig | null
   // wide shape screens expect: { h, [canalKey]: valor, ... }.
   const volumeByHora = new Map<number, { h: number } & Record<string, number>>();
   for (const row of volumeRes.data ?? []) {
-    const entry = volumeByHora.get(row.hora) ?? { h: row.hora };
+    const entry: { h: number } & Record<string, number> =
+      volumeByHora.get(row.hora) ?? { h: row.hora };
     entry[row.canal_key] = Number(row.valor);
     volumeByHora.set(row.hora, entry);
   }
