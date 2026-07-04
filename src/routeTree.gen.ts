@@ -9,38 +9,72 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ClientIdRouteRouteImport } from './routes/$clientId/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ClientIdIndexRouteImport } from './routes/$clientId/index'
+import { Route as ClientIdSectionRouteImport } from './routes/$clientId/$section'
 
+const ClientIdRouteRoute = ClientIdRouteRouteImport.update({
+  id: '/$clientId',
+  path: '/$clientId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClientIdIndexRoute = ClientIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ClientIdRouteRoute,
+} as any)
+const ClientIdSectionRoute = ClientIdSectionRouteImport.update({
+  id: '/$section',
+  path: '/$section',
+  getParentRoute: () => ClientIdRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$clientId': typeof ClientIdRouteRouteWithChildren
+  '/$clientId/$section': typeof ClientIdSectionRoute
+  '/$clientId/': typeof ClientIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$clientId/$section': typeof ClientIdSectionRoute
+  '/$clientId': typeof ClientIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$clientId': typeof ClientIdRouteRouteWithChildren
+  '/$clientId/$section': typeof ClientIdSectionRoute
+  '/$clientId/': typeof ClientIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/$clientId' | '/$clientId/$section' | '/$clientId/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/$clientId/$section' | '/$clientId'
+  id: '__root__' | '/' | '/$clientId' | '/$clientId/$section' | '/$clientId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ClientIdRouteRoute: typeof ClientIdRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/$clientId': {
+      id: '/$clientId'
+      path: '/$clientId'
+      fullPath: '/$clientId'
+      preLoaderRoute: typeof ClientIdRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +82,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$clientId/': {
+      id: '/$clientId/'
+      path: '/'
+      fullPath: '/$clientId/'
+      preLoaderRoute: typeof ClientIdIndexRouteImport
+      parentRoute: typeof ClientIdRouteRoute
+    }
+    '/$clientId/$section': {
+      id: '/$clientId/$section'
+      path: '/$section'
+      fullPath: '/$clientId/$section'
+      preLoaderRoute: typeof ClientIdSectionRouteImport
+      parentRoute: typeof ClientIdRouteRoute
+    }
   }
 }
 
+interface ClientIdRouteRouteChildren {
+  ClientIdSectionRoute: typeof ClientIdSectionRoute
+  ClientIdIndexRoute: typeof ClientIdIndexRoute
+}
+
+const ClientIdRouteRouteChildren: ClientIdRouteRouteChildren = {
+  ClientIdSectionRoute: ClientIdSectionRoute,
+  ClientIdIndexRoute: ClientIdIndexRoute,
+}
+
+const ClientIdRouteRouteWithChildren = ClientIdRouteRoute._addFileChildren(
+  ClientIdRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ClientIdRouteRoute: ClientIdRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
