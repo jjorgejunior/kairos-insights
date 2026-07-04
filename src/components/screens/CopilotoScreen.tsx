@@ -78,104 +78,9 @@ function renderMd(text: string): string {
   return out.join("");
 }
 
-/* --------------------------------------------------------------- gate UI */
-function ApiKeyGate({ onActivate }: { onActivate: (key: string) => void }) {
-  const [key, setKey] = useState("");
-  return (
-    <div style={{ maxWidth: 640, margin: "60px auto 0" }}>
-      <div
-        style={{
-          background: "var(--panel)",
-          border: "1px solid var(--line)",
-          borderRadius: 14,
-          padding: "32px 30px",
-          textAlign: "center",
-        }}
-      >
-        <div
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 12,
-            background: "var(--kairos-soft)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "0 auto 16px",
-            fontSize: 20,
-            color: "var(--kairos)",
-          }}
-        >
-          🔑
-        </div>
-        <h2 style={{ fontSize: 19, fontWeight: 800, margin: "0 0 8px" }}>Configurar Gemini API</h2>
-        <p style={{ fontSize: 13, color: "var(--graphite)", lineHeight: 1.5, margin: "0 0 20px" }}>
-          A chave fica apenas nesta sessão do navegador — não é gravada nem enviada aos nossos
-          servidores.
-        </p>
-        <input
-          type="password"
-          value={key}
-          onChange={(e) => setKey(e.target.value)}
-          placeholder="Cole sua chave da API Gemini"
-          style={{
-            width: "100%",
-            padding: "11px 14px",
-            borderRadius: 9,
-            border: "1px solid var(--line)",
-            background: "var(--paper)",
-            fontFamily: "var(--f-display)",
-            fontSize: 13.5,
-            color: "var(--ink)",
-            outline: "none",
-            marginBottom: 12,
-            boxSizing: "border-box",
-          }}
-        />
-        <div style={{ marginBottom: 18 }}>
-          <a
-            href="https://aistudio.google.com/apikey"
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              fontSize: 12,
-              color: "var(--kairos)",
-              fontWeight: 600,
-              textDecoration: "none",
-            }}
-          >
-            Obter chave gratuita →
-          </a>
-        </div>
-        <button
-          className="btn"
-          disabled={!key.trim()}
-          onClick={() => onActivate(key.trim())}
-          style={{
-            width: "100%",
-            padding: "12px 18px",
-            borderRadius: 9,
-            background: key.trim() ? "var(--kairos)" : "var(--line)",
-            color: key.trim() ? "#fff" : "var(--faint)",
-            border: "none",
-            fontWeight: 600,
-            fontSize: 13.5,
-            cursor: key.trim() ? "pointer" : "not-allowed",
-          }}
-        >
-          Ativar Consultor
-        </button>
-      </div>
-    </div>
-  );
-}
-
 /* -------------------------------------------------------------- screen */
 export function CopilotoScreen() {
   const client = useClient();
-  const geminiApiKey = useAppStore((s) => s.geminiApiKey);
-  const setGeminiApiKey = useAppStore((s) => s.setGeminiApiKey);
-  const clearGeminiApiKey = useAppStore((s) => s.clearGeminiApiKey);
   const chats = useAppStore((s) => s.chats);
   const setChat = useAppStore((s) => s.setChat);
   const clearChat = useAppStore((s) => s.clearChat);
@@ -233,20 +138,20 @@ export function CopilotoScreen() {
 
   async function send(msg: string) {
     const text = msg.trim();
-    if (!text || loading || !geminiApiKey) return;
+    if (!text || loading) return;
     const history: ChatMessage[] = [...chat, { role: "user", content: text, t: Date.now() }];
     setChat(client.id, history);
     setInput("");
     setLoading(true);
     setError(null);
     try {
-      const reply = await sendMessage(
-        geminiApiKey,
-        chat.map((m) => ({ role: m.role, content: m.content })),
-        text,
-        buildSystemPrompt(client),
-        { timeoutMs: 30000 },
-      );
+      const reply = await sendMessage({
+        data: {
+          history: chat.map((m) => ({ role: m.role, content: m.content })),
+          userMessage: text,
+          systemPrompt: buildSystemPrompt(client),
+        },
+      });
       setChat(client.id, [...history, { role: "model", content: reply, t: Date.now() }]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha ao consultar o modelo. Tente reenviar.");
@@ -263,17 +168,6 @@ export function CopilotoScreen() {
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     send(input);
-  }
-
-  if (!geminiApiKey) {
-    return (
-      <div
-        className="kview"
-        style={{ maxWidth: 1120, margin: "0 auto", padding: "34px 30px 40px" }}
-      >
-        <ApiKeyGate onActivate={setGeminiApiKey} />
-      </div>
-    );
   }
 
   return (
@@ -301,10 +195,7 @@ export function CopilotoScreen() {
             </div>
             <button
               className="no-print"
-              onClick={() => {
-                clearGeminiApiKey();
-                clearChat(client.id);
-              }}
+              onClick={() => clearChat(client.id)}
               style={{
                 fontFamily: MONO,
                 fontSize: 10.5,
@@ -317,7 +208,7 @@ export function CopilotoScreen() {
                 cursor: "pointer",
               }}
             >
-              Alterar chave
+              Limpar conversa
             </button>
           </div>
 

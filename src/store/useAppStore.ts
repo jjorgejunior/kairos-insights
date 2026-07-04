@@ -39,11 +39,6 @@ interface AppStore {
   setChat: (clientId: string, msgs: ChatMessage[]) => void;
   clearChat: (clientId: string) => void;
 
-  // gemini key — memory only, never persisted
-  geminiApiKey: string | null;
-  setGeminiApiKey: (key: string) => void;
-  clearGeminiApiKey: () => void;
-
   // global cursor-following tooltip
   tip: TipState | null;
   setTip: (x: number, y: number, html: string) => void;
@@ -80,10 +75,6 @@ export const useAppStore = create<AppStore>((set) => ({
   chats: {},
   setChat: (clientId, msgs) => set((s) => ({ chats: { ...s.chats, [clientId]: msgs } })),
   clearChat: (clientId) => set((s) => ({ chats: { ...s.chats, [clientId]: [] } })),
-
-  geminiApiKey: null,
-  setGeminiApiKey: (key) => set({ geminiApiKey: key }),
-  clearGeminiApiKey: () => set({ geminiApiKey: null }),
 
   tip: null,
   setTip: (x, y, html) => set({ tip: { x, y, html } }),
