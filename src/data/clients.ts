@@ -76,10 +76,19 @@ export interface GameScenario {
   leitura: string;
 }
 
+export interface PrecoCampo {
+  categoria: string;
+  precos: (number | null)[]; // aligned with JogosData.precosCampoPlayers
+}
+
 export interface JogosData {
   selected: number;
   cenarios: GameScenario[];
   rec: Recommendation;
+  // Optional real-world price survey — only rendered when a client has this data.
+  precosCampoPlayers?: string[];
+  precosCampoLabel?: string; // e.g. "Coletado em campo · Salvador Shopping · Jun/2026"
+  precosCampo?: PrecoCampo[];
 }
 
 export interface ClientConfig {
@@ -306,6 +315,20 @@ export const CLIENTS: Record<string, ClientConfig> = {
         impactoNum: "+16",
         impactoLbl: "payoff vs. premium",
       },
+      precosCampoPlayers: ["McD", "BK", "Subway", "Madero"],
+      precosCampoLabel: "Coletado em campo · Salvador Shopping · Jun/2026",
+      precosCampo: [
+        { categoria: "Sanduíche premium", precos: [28.9, 29.9, 27.9, 38.9] },
+        { categoria: "Sanduíche premium 2", precos: [30.9, 33.9, 29.9, 42.9] },
+        { categoria: "Sanduíche barato", precos: [10.9, 11.9, 18.9, null] },
+        { categoria: "Combo médio", precos: [39.9, 41.9, null, null] },
+        { categoria: "Combo premium", precos: [46.9, 48.9, null, 59.9] },
+        { categoria: "Batata", precos: [11.9, 12.9, null, 14.9] },
+        { categoria: "Sobremesa", precos: [15.9, 13.9, 8.9, 16.9] },
+        { categoria: "Bebida (350ml)", precos: [8.9, 8.9, 8.5, 9.9] },
+        { categoria: "Café da manhã", precos: [15.9, 16.9, null, null] },
+        { categoria: "Kids", precos: [31.9, 29.9, null, null] },
+      ],
     },
   },
 

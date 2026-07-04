@@ -2,9 +2,86 @@ import { useState } from "react";
 import { useClient } from "@/lib/client-context";
 import { findNashPure, checkDominance } from "@/utils/nash";
 import type { GameScenario } from "@/data/clients";
-import { ScreenHead, RecommendationPlaque } from "@/components/ui-kit";
+import { ScreenHead, RecommendationPlaque, Pill } from "@/components/ui-kit";
+import { DataTable, type Column } from "@/components/ui-kit/DataTable";
+import { fmt } from "@/utils/format";
 
 const MONO = "var(--f-mono)";
+
+/* --------------------------------------------------------- PrecosCampo */
+interface PrecoRow {
+  categoria: string;
+  precos: (number | null)[];
+}
+
+function PrecosCampo({
+  players,
+  rows,
+  label,
+}: {
+  players: string[];
+  rows: PrecoRow[];
+  label?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const columns: Column<PrecoRow>[] = [
+    { key: "categoria", header: "Categoria", accessor: (r) => r.categoria },
+    ...players.map(
+      (p, i): Column<PrecoRow> => ({
+        key: p,
+        header: p,
+        align: "right",
+        mono: true,
+        render: (r) => (r.precos[i] != null ? `R$ ${fmt(r.precos[i] as number, 2)}` : "—"),
+      }),
+    ),
+  ];
+
+  return (
+    <div
+      className="card no-print"
+      style={{
+        background: "var(--panel)",
+        border: "1px solid var(--line)",
+        borderRadius: 12,
+        padding: 18,
+        marginBottom: 16,
+      }}
+    >
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          background: "transparent",
+          border: "none",
+          padding: 0,
+          cursor: "pointer",
+          fontSize: 13,
+          fontWeight: 700,
+          color: "var(--ink)",
+        }}
+      >
+        <span>Ver preços coletados em campo (Salvador Shopping)</span>
+        <span style={{ fontFamily: MONO, fontSize: 11, color: "var(--faint)" }}>
+          {open ? "▲" : "▼"}
+        </span>
+      </button>
+      {open && (
+        <div style={{ marginTop: 16 }}>
+          <DataTable columns={columns} data={rows} />
+          {label && (
+            <div style={{ marginTop: 10 }}>
+              <Pill label={label} />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ------------------------------------------------------------ PayoffMatrix */
 function PayoffMatrix({ cen, nash }: { cen: GameScenario; nash: [number, number][] }) {
@@ -173,6 +250,14 @@ export function JogosScreen() {
           );
         })}
       </div>
+
+      {client.jogos.precosCampo && client.jogos.precosCampo.length > 0 && (
+        <PrecosCampo
+          players={client.jogos.precosCampoPlayers ?? []}
+          rows={client.jogos.precosCampo}
+          label={client.jogos.precosCampoLabel}
+        />
+      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 16, marginBottom: 16 }}>
         {/* matrix */}
