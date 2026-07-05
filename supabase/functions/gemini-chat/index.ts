@@ -24,7 +24,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const apiKey = Deno.env.get("GEMINI_API_KEY");
+    const apiKey = Deno.env.get("GEMINI_API_KEY") ?? Deno.env.get("Secret_Gemini");
     if (!apiKey) {
       return new Response(
         JSON.stringify({ error: "GEMINI_API_KEY não configurada no servidor." }),
