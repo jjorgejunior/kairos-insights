@@ -1,11 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import type { Section } from "@/data/clients";
+import type { AccentKey, Section } from "@/data/clients";
 import { toRawActivities } from "@/data/clients";
 import { useClient } from "@/lib/client-context";
 import { calcMMs } from "@/utils/queuing";
 import { derivePert } from "@/utils/pert";
 import { calcEOQ, daysToConsume } from "@/utils/eoq";
-import { HeroNumber, RecommendationRow } from "@/components/ui-kit";
+import { HeroNumber, RecommendationRow, accentVar } from "@/components/ui-kit";
 
 const MONO = "var(--f-mono)";
 
@@ -25,13 +25,15 @@ interface HeroKpi {
 export function PainelScreen() {
   const client = useClient();
 
+  // Severity is authored per front (rec.accent). The KPI dot, the status chip,
+  // the executive read and the sidebar badge all read from this single source,
+  // so they can never contradict one another.
+  const statusFor = (accent: AccentKey, crit: string, att: string, ok: string) =>
+    accent === "critical" ? crit : accent === "amber" ? att : ok;
+
   // ---------- FILAS ----------
   const canal = client.filas.canais[0];
   const kpi = calcMMs(canal.lambda, canal.mu, canal.s);
-  const filasColor =
-    kpi.rho >= 0.85 ? "var(--critical)" : kpi.rho >= 0.7 ? "var(--amber)" : "var(--optimal)";
-  const filasStatus =
-    kpi.unstable || kpi.rho >= 0.85 ? "Sobrecarga" : kpi.rho >= 0.7 ? "Atenção" : "Estável";
 
   // ---------- CRONOGRAMA ----------
   const pt = derivePert(toRawActivities(client.pert.atividades));
@@ -48,9 +50,9 @@ export function PainelScreen() {
       frente: "FILAS",
       label: "Utilização no pico",
       context: `${canal.label} · jantar`,
-      status: filasStatus,
-      color: filasColor,
-      action: kpi.unstable || kpi.rho >= 0.7,
+      status: statusFor(client.filas.rec.accent, "Ação requerida", "Atenção", "Estável"),
+      color: accentVar(client.filas.rec.accent),
+      action: client.filas.rec.accent === "critical",
       section: "filas",
       value: kpi.rho * 100,
       unit: "%",
@@ -60,9 +62,9 @@ export function PainelScreen() {
       frente: "CRONOGRAMA",
       label: "Prazo do projeto",
       context: `${pt.cp.length} atividades críticas`,
-      status: "No prazo",
-      color: "var(--kairos)",
-      action: false,
+      status: statusFor(client.pert.rec.accent, "Ação requerida", "Atenção", "No prazo"),
+      color: accentVar(client.pert.rec.accent),
+      action: client.pert.rec.accent === "critical",
       section: "cronograma",
       value: pt.duracao,
       unit: "d",
@@ -71,9 +73,9 @@ export function PainelScreen() {
       frente: "ESTOQUES",
       label: "SKUs em risco",
       context: "lote ótimo acima da validade",
-      status: violaCount > 0 ? "Ação requerida" : "Sob controle",
-      color: violaCount > 0 ? "var(--critical)" : "var(--optimal)",
-      action: violaCount > 0,
+      status: statusFor(client.estoque.rec.accent, "Ação requerida", "Atenção", "Sob controle"),
+      color: accentVar(client.estoque.rec.accent),
+      action: client.estoque.rec.accent === "critical",
       section: "estoques",
       value: violaCount,
       unit: `/${eRows.length}`,
@@ -82,9 +84,9 @@ export function PainelScreen() {
       frente: "JOGOS",
       label: "Cenários mapeados",
       context: "equilíbrio de Nash",
-      status: "Resolvido",
-      color: "var(--kairos)",
-      action: false,
+      status: statusFor(client.jogos.rec.accent, "Ação requerida", "Atenção", "Resolvido"),
+      color: accentVar(client.jogos.rec.accent),
+      action: client.jogos.rec.accent === "critical",
       section: "jogos",
       value: client.jogos.cenarios.length,
       unit: "",
