@@ -12,8 +12,10 @@ const MONO = "var(--f-mono)";
 interface HeroKpi {
   frente: string;
   label: string;
-  sub: string;
+  context: string;
+  status: string;
   color: string;
+  action: boolean; // front demands action → feeds the executive read
   section: Section;
   value: number;
   unit: string;
@@ -28,6 +30,8 @@ export function PainelScreen() {
   const kpi = calcMMs(canal.lambda, canal.mu, canal.s);
   const filasColor =
     kpi.rho >= 0.85 ? "var(--critical)" : kpi.rho >= 0.7 ? "var(--amber)" : "var(--optimal)";
+  const filasStatus =
+    kpi.unstable || kpi.rho >= 0.85 ? "Sobrecarga" : kpi.rho >= 0.7 ? "Atenção" : "Estável";
 
   // ---------- CRONOGRAMA ----------
   const pt = derivePert(toRawActivities(client.pert.atividades));
@@ -43,8 +47,10 @@ export function PainelScreen() {
     {
       frente: "FILAS",
       label: "Utilização no pico",
-      sub: `ρ = λ/(s·μ) · ${canal.label}`,
+      context: `${canal.label} · jantar`,
+      status: filasStatus,
       color: filasColor,
+      action: kpi.unstable || kpi.rho >= 0.7,
       section: "filas",
       value: kpi.rho * 100,
       unit: "%",
@@ -52,32 +58,40 @@ export function PainelScreen() {
     },
     {
       frente: "CRONOGRAMA",
-      label: "Duração esperada",
-      sub: `Te derivado · ${pt.cp.length} críticas`,
+      label: "Prazo do projeto",
+      context: `${pt.cp.length} atividades críticas`,
+      status: "No prazo",
       color: "var(--kairos)",
+      action: false,
       section: "cronograma",
       value: pt.duracao,
       unit: "d",
     },
     {
       frente: "ESTOQUES",
-      label: "SKUs em risco de perda",
-      sub: "Q* acima da validade",
+      label: "SKUs em risco",
+      context: "lote ótimo acima da validade",
+      status: violaCount > 0 ? "Ação requerida" : "Sob controle",
       color: violaCount > 0 ? "var(--critical)" : "var(--optimal)",
+      action: violaCount > 0,
       section: "estoques",
       value: violaCount,
       unit: `/${eRows.length}`,
     },
     {
       frente: "JOGOS",
-      label: "Cenários resolvidos",
-      sub: "Equilíbrio de Nash puro",
+      label: "Cenários mapeados",
+      context: "equilíbrio de Nash",
+      status: "Resolvido",
       color: "var(--kairos)",
+      action: false,
       section: "jogos",
       value: client.jogos.cenarios.length,
       unit: "",
     },
   ];
+
+  const actionCount = heroKpis.filter((k) => k.action).length;
 
   const topRecs: { rec: typeof client.filas.rec; frente: string; section: Section }[] = [
     { rec: client.filas.rec, frente: "FILAS", section: "filas" },
@@ -88,79 +102,89 @@ export function PainelScreen() {
 
   return (
     <div className="kview" style={{ maxWidth: 1180, margin: "0 auto", padding: "34px 30px 70px" }}>
-      {/* context header */}
+      {/* ---------------- header ---------------- */}
+      <div
+        style={{
+          fontFamily: MONO,
+          fontSize: 11,
+          letterSpacing: ".2em",
+          color: "var(--kairos)",
+          marginBottom: 12,
+        }}
+      >
+        PAINEL EXECUTIVO
+        <span style={{ color: "var(--faint)" }}>
+          {"  ·  "}
+          {client.industry}
+          {"  ·  "}
+          {client.periodo}
+        </span>
+      </div>
+      <h1
+        style={{
+          fontSize: 40,
+          fontWeight: 800,
+          letterSpacing: "-.025em",
+          lineHeight: 1.03,
+          margin: 0,
+        }}
+      >
+        {client.cliente}
+      </h1>
+      <p
+        style={{
+          maxWidth: 720,
+          fontSize: 15.5,
+          lineHeight: 1.5,
+          color: "var(--graphite)",
+          margin: "14px 0 0",
+        }}
+      >
+        {client.resumo}
+      </p>
+
+      {/* executive read strip */}
       <div
         style={{
           display: "flex",
-          flexWrap: "wrap",
-          justifyContent: "space-between",
-          alignItems: "flex-end",
-          gap: 20,
-          marginBottom: 8,
+          alignItems: "center",
+          gap: 12,
+          marginTop: 22,
+          padding: "13px 18px",
+          borderRadius: 11,
+          background: "var(--chrome)",
+          color: "var(--chrome-fg)",
         }}
       >
-        <div style={{ maxWidth: 640 }}>
-          <div
-            style={{
-              fontFamily: MONO,
-              fontSize: 11,
-              letterSpacing: ".2em",
-              color: "var(--kairos)",
-              marginBottom: 12,
-            }}
-          >
-            VISÃO GERAL DO ENGAJAMENTO
-          </div>
-          <h1
-            style={{
-              fontSize: 38,
-              fontWeight: 800,
-              letterSpacing: "-.02em",
-              lineHeight: 1.05,
-              margin: 0,
-            }}
-          >
-            {client.headline}
-          </h1>
-        </div>
-        <div
+        <span
           style={{
-            border: "1px solid var(--line)",
-            borderRadius: 10,
-            background: "var(--panel)",
-            padding: "16px 18px",
-            minWidth: 230,
             fontFamily: MONO,
-            fontSize: 11,
-            lineHeight: 2,
+            fontWeight: 600,
+            fontSize: 20,
+            letterSpacing: "-.02em",
+            color: actionCount > 0 ? "var(--critical)" : "var(--optimal)",
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
-            <span style={{ color: "var(--faint)" }}>CLIENTE</span>
-            <span style={{ fontWeight: 600 }}>{client.short}</span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
-            <span style={{ color: "var(--faint)" }}>SETOR</span>
-            <span>{client.industry}</span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
-            <span style={{ color: "var(--faint)" }}>PERÍODO</span>
-            <span>{client.periodo}</span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
-            <span style={{ color: "var(--faint)" }}>ANALISTA</span>
-            <span>{client.autor}</span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
-            <span style={{ color: "var(--faint)" }}>VERSÃO</span>
-            <span>{client.version}</span>
-          </div>
-        </div>
+          {actionCount}/{heroKpis.length}
+        </span>
+        <span style={{ fontSize: 13.5, lineHeight: 1.4 }}>
+          {actionCount > 0 ? (
+            <>
+              <strong style={{ fontWeight: 700 }}>frentes exigem ação imediata.</strong>{" "}
+              <span style={{ color: "#9A9EA8" }}>Plano priorizado por impacto abaixo.</span>
+            </>
+          ) : (
+            <>
+              <strong style={{ fontWeight: 700 }}>frentes sob controle.</strong>{" "}
+              <span style={{ color: "#9A9EA8" }}>Oportunidades de otimização no plano abaixo.</span>
+            </>
+          )}
+        </span>
       </div>
 
-      <div style={{ height: 1, background: "var(--line)", margin: "26px 0 24px" }} />
+      <div style={{ height: 1, background: "var(--line)", margin: "28px 0 24px" }} />
 
-      {/* hero KPIs */}
+      {/* ---------------- hero KPIs ---------------- */}
       <div
         style={{
           fontFamily: MONO,
@@ -180,12 +204,14 @@ export function PainelScreen() {
             params={{ clientId: client.id, section: k.section }}
             className="kpi pop"
             style={{
-              display: "block",
+              display: "flex",
+              flexDirection: "column",
               background: "var(--panel)",
               border: "1px solid var(--line)",
               borderRadius: 12,
-              padding: "18px 18px 20px",
+              padding: "18px 18px 16px",
               cursor: "pointer",
+              minHeight: 172,
               ["--i" as string]: i,
             }}
           >
@@ -194,7 +220,7 @@ export function PainelScreen() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                marginBottom: 14,
+                marginBottom: 16,
               }}
             >
               <span
@@ -209,12 +235,13 @@ export function PainelScreen() {
               </span>
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: k.color }} />
             </div>
+
             {k.unstableText ? (
               <span
                 style={{
                   fontFamily: MONO,
                   fontWeight: 600,
-                  fontSize: 34,
+                  fontSize: 36,
                   letterSpacing: "-.03em",
                   lineHeight: 1,
                   color: k.color,
@@ -228,24 +255,40 @@ export function PainelScreen() {
                 value={k.value}
                 unit={k.unit}
                 color={k.color}
-                size={34}
+                size={36}
                 countUp
                 resetKey={client.id}
               />
             )}
-            <div style={{ fontSize: 12.5, color: "var(--ink)", fontWeight: 600, marginTop: 10 }}>
+
+            <div style={{ fontSize: 13, color: "var(--ink)", fontWeight: 600, marginTop: 11 }}>
               {k.label}
             </div>
-            <div
-              style={{ fontSize: 11.5, color: "var(--graphite)", marginTop: 3, lineHeight: 1.4 }}
-            >
-              {k.sub}
+            <div style={{ fontSize: 11.5, color: "var(--graphite)", marginTop: 2 }}>
+              {k.context}
             </div>
+
+            <span
+              style={{
+                marginTop: "auto",
+                alignSelf: "flex-start",
+                fontFamily: MONO,
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: ".04em",
+                color: k.color,
+                background: `color-mix(in srgb, ${k.color} 12%, transparent)`,
+                padding: "3px 9px",
+                borderRadius: 20,
+              }}
+            >
+              {k.status}
+            </span>
           </Link>
         ))}
       </div>
 
-      {/* recommendations */}
+      {/* ---------------- action plan ---------------- */}
       <div
         style={{
           display: "flex",
@@ -257,10 +300,10 @@ export function PainelScreen() {
         <div
           style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".16em", color: "var(--faint)" }}
         >
-          RECOMENDAÇÕES PRIORIZADAS
+          PLANO DE AÇÃO
         </div>
         <div style={{ fontFamily: MONO, fontSize: 11, color: "var(--graphite)" }}>
-          {topRecs.length} ações · uma por frente
+          {topRecs.length} recomendações · uma por frente
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
