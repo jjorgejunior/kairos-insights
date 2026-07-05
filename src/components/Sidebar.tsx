@@ -12,7 +12,7 @@ const NAV: { r: Section; label: string; glyph: string }[] = [
   { r: "filas", label: "Filas de atendimento", glyph: "≋" },
   { r: "cronograma", label: "Cronograma · PERT", glyph: "⌥" },
   { r: "estoques", label: "Estoques · EOQ", glyph: "▤" },
-  { r: "jogos", label: "Jogos competitivos", glyph: "◈" },
+  { r: "jogos", label: "Estratégia competitiva", glyph: "◈" },
   { r: "copiloto", label: "Copiloto de IA", glyph: "✦" },
 ];
 
@@ -156,7 +156,7 @@ export function Sidebar({ client, section }: { client: ClientConfig; section: Se
             marginBottom: 9,
           }}
         >
-          ENGAJAMENTO ATIVO
+          CLIENTES
         </div>
         {clientList.map((pr) => {
           const k = pr.id;
