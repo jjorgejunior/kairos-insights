@@ -23,8 +23,14 @@ export function buildSystemPrompt(client: ClientConfig): string {
 
   const crash = runCrashing(pt.acts, client.pert.budget, pt.duracao);
 
-  const f = client.filas.canais[0];
-  const mm = calcMMs(f.lambda, f.mu, f.s);
+  // Every service channel (e.g. balcão + totens), so the copilot knows the
+  // full station layout — not just the first channel.
+  const canaisTxt = client.filas.canais
+    .map((c) => {
+      const mm = calcMMs(c.lambda, c.mu, c.s);
+      return `${c.label} (s=${c.s} postos): λ=${c.lambda}/h, μ=${c.mu}/h → ρ=${(mm.rho * 100).toFixed(1)}%, Wq=${(mm.Wq * 3600).toFixed(0)}s`;
+    })
+    .join("; ");
 
   const nashScen = client.jogos.cenarios[0];
   const ne = findNashPure(nashScen.matrix);
@@ -38,7 +44,7 @@ REGRAS:
 2. EXPLICABILIDADE OBRIGATÓRIA: toda resposta DEVE citar a fórmula/conceito usado (ex.: ρ=λ/(s·μ), Q*=√(2DS/H), Folga=LS−ES, Nash = ninguém melhora desviando unilateralmente).
 3. Responda em português, técnico, didático e direto. Máx. 6–8 linhas salvo pedido de detalhe.
 4. DADOS REAIS DERIVADOS deste engajamento (nunca invente):
- • Filas ${f.label}: λ=${f.lambda}/h, μ=${f.mu}/h, s=${f.s} → ρ=${(mm.rho * 100).toFixed(1)}%, Wq=${(mm.Wq * 3600).toFixed(0)}s.
+ • Filas — canais de atendimento: ${canaisTxt}.
  • PERT: duração esperada Te=${pt.duracao}d, σ=${pt.sigma}d, ${pt.cp.length}/${pt.acts.length} atividades críticas (caminho ${pt.cp.join("-")}). Crashing R$${crash.spent.toLocaleString("pt-BR")} → ${crash.finalDuration}d.
  • Estoques: ${violaCount}/${eRows.length} SKUs com Q* acima da validade.
  • Jogos (${nashScen.titulo}): Nash puro em ${nashTxt}.`;
