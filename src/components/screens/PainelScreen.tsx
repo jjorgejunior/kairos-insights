@@ -32,8 +32,12 @@ export function PainelScreen() {
     accent === "critical" ? crit : accent === "amber" ? att : ok;
 
   // ---------- FILAS ----------
+  // Se a equipe adotou o modelo "fila única" (filas.pool), o painel mostra
+  // esse número; senão, cai no primeiro canal.
   const canal = client.filas.canais[0];
-  const kpi = calcMMs(canal.lambda, canal.mu, canal.s);
+  const filasSys = client.filas.pool ?? { lambda: canal.lambda, mu: canal.mu, s: canal.s };
+  const filasCtx = client.filas.pool ? "Fila única · pico" : `${canal.label} · jantar`;
+  const kpi = calcMMs(filasSys.lambda, filasSys.mu, filasSys.s);
 
   // ---------- CRONOGRAMA ----------
   const pt = derivePert(toRawActivities(client.pert.atividades));
@@ -49,7 +53,7 @@ export function PainelScreen() {
     {
       frente: "FILAS",
       label: "Utilização no pico",
-      context: `${canal.label} · jantar`,
+      context: filasCtx,
       status: statusFor(client.filas.rec.accent, "Ação requerida", "Atenção", "Estável"),
       color: accentVar(client.filas.rec.accent),
       action: client.filas.rec.accent === "critical",
