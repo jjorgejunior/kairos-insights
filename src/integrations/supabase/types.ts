@@ -183,18 +183,27 @@ export type Database = {
         Row: {
           client_id: string
           lambda: number
+          pool_lambda: number | null
+          pool_mu: number | null
+          pool_s: number | null
           s: number
           service_min: number
         }
         Insert: {
           client_id: string
           lambda: number
+          pool_lambda?: number | null
+          pool_mu?: number | null
+          pool_s?: number | null
           s: number
           service_min: number
         }
         Update: {
           client_id?: string
           lambda?: number
+          pool_lambda?: number | null
+          pool_mu?: number | null
+          pool_s?: number | null
           s?: number
           service_min?: number
         }

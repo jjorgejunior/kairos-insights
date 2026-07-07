@@ -29,6 +29,9 @@ export interface FilasData {
   canais: FilasCanal[];
   volume: Array<{ h: number } & Record<string, number>>;
   sim: { lambda: number; s: number; serviceMin: number };
+  // Parâmetros do sistema "fila única" (pooling), medidos em campo — quando
+  // presentes, o comparativo usa estes números em vez de somar os canais.
+  pool?: { lambda: number; mu: number; s: number };
   rec: Recommendation;
 }
 

@@ -172,18 +172,23 @@ export function FilasScreen() {
     m: calcMMs(c.lambda, c.mu, c.s),
     combined: false,
   }));
-  // Pooling só faz sentido físico se todos os canais têm o mesmo μ (mesmo serviço).
+  // Coluna "Combinado" (fila única). Se houver parâmetros medidos em campo
+  // (filas.pool), usa-os — assim o dashboard bate com o cálculo manual do
+  // relatório. Senão, aproxima juntando os canais (só se μ for igual).
   const muEqual = filas.canais.every((c) => Math.abs(c.mu - filas.canais[0].mu) < 1e-6);
-  const lambdaTot = +filas.canais.reduce((a, c) => a + c.lambda, 0).toFixed(1);
   const sTot = filas.canais.reduce((a, c) => a + c.s, 0);
+  const poolMeasured = !!filas.pool;
+  const poolLambda = filas.pool ? filas.pool.lambda : +filas.canais.reduce((a, c) => a + c.lambda, 0).toFixed(1);
+  const poolMu = filas.pool ? filas.pool.mu : filas.canais[0].mu;
+  const poolS = filas.pool ? filas.pool.s : sTot;
   const pooled =
-    muEqual && filas.canais.length > 1
+    filas.pool || (muEqual && filas.canais.length > 1)
       ? {
           label: "Combinado",
-          s: sTot,
-          lambda: lambdaTot,
-          mu: filas.canais[0].mu,
-          m: calcMMs(lambdaTot, filas.canais[0].mu, sTot),
+          s: poolS,
+          lambda: poolLambda,
+          mu: poolMu,
+          m: calcMMs(poolLambda, poolMu, poolS),
           combined: true,
         }
       : null;
@@ -413,14 +418,21 @@ export function FilasScreen() {
             );
           })}
         </div>
-        {pooled && (
+        {pooled && poolMeasured && (
+          <p style={{ fontSize: 12, color: "var(--graphite)", lineHeight: 1.55, margin: "14px 0 0" }}>
+            <strong>Modelo adotado.</strong> O cenário <strong>Combinado</strong> trata balcão e
+            totens como uma <strong>fila única com s={poolS}</strong> (o cliente vai a qualquer posto
+            livre) e usa a <strong>taxa de chegada medida em campo (λ={poolLambda}/h)</strong> — por
+            isso reproduz o cálculo manual do relatório: ρ = λ/(s·μ) ={" "}
+            {(pooled.m.rho * 100).toFixed(1)}%. As colunas por canal (médias amostrais por sessão)
+            ficam como leitura complementar.
+          </p>
+        )}
+        {pooled && !poolMeasured && (
           <p style={{ fontSize: 12, color: "var(--graphite)", lineHeight: 1.55, margin: "14px 0 0" }}>
             O cenário <strong>Combinado</strong> junta os {filas.canais.length} canais numa{" "}
             <strong>fila única com s={sTot}</strong> (pooling): a mesma demanda, mas qualquer
-            atendente serve qualquer cliente — o que reduz a espera vs. filas separadas. Por isso um
-            cálculo com s={sTot} dá ρ e Wq diferentes de tratar balcão e totem em separado. E como ρ
-            = λ/(s·μ), se o λ medido em campo for maior (ex.: ~54/h num levantamento manual), o ρ
-            sobe na mesma proporção.
+            atendente serve qualquer cliente — o que reduz a espera vs. filas separadas.
           </p>
         )}
       </div>

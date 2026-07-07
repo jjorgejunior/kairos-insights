@@ -188,6 +188,10 @@ export async function fetchClientConfig(id: string): Promise<ClientConfig | null
       sim: sim
         ? { lambda: Number(sim.lambda), s: sim.s, serviceMin: Number(sim.service_min) }
         : { lambda: 0, s: 1, serviceMin: 1 },
+      pool:
+        sim?.pool_lambda != null && sim?.pool_mu != null && sim?.pool_s != null
+          ? { lambda: Number(sim.pool_lambda), mu: Number(sim.pool_mu), s: Number(sim.pool_s) }
+          : undefined,
       rec: recFor(recs, "filas"),
     },
     pert: {
