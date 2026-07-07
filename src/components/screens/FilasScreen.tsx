@@ -12,6 +12,8 @@ import {
   LegendItem,
 } from "@/components/ui-kit";
 
+const MONO = "var(--f-mono)";
+
 /* ------------------------------------------------------------ VolumeChart */
 function VolumeChart({
   volume,
@@ -159,6 +161,34 @@ export function FilasScreen() {
   const simRhoColor =
     sim.rho >= 0.85 ? "var(--critical)" : sim.rho >= 0.7 ? "var(--amber)" : "var(--optimal)";
 
+  // ---- Comparativo de canais + cenário "fila única" (pooling) ----
+  const rhoCol = (r: number, unstable: boolean) =>
+    unstable || r >= 0.85 ? "var(--critical)" : r >= 0.7 ? "var(--amber)" : "var(--optimal)";
+  const canalStats = filas.canais.map((c) => ({
+    label: c.label,
+    s: c.s,
+    lambda: c.lambda,
+    mu: c.mu,
+    m: calcMMs(c.lambda, c.mu, c.s),
+    combined: false,
+  }));
+  // Pooling só faz sentido físico se todos os canais têm o mesmo μ (mesmo serviço).
+  const muEqual = filas.canais.every((c) => Math.abs(c.mu - filas.canais[0].mu) < 1e-6);
+  const lambdaTot = +filas.canais.reduce((a, c) => a + c.lambda, 0).toFixed(1);
+  const sTot = filas.canais.reduce((a, c) => a + c.s, 0);
+  const pooled =
+    muEqual && filas.canais.length > 1
+      ? {
+          label: "Combinado",
+          s: sTot,
+          lambda: lambdaTot,
+          mu: filas.canais[0].mu,
+          m: calcMMs(lambdaTot, filas.canais[0].mu, sTot),
+          combined: true,
+        }
+      : null;
+  const compareCols = pooled ? [...canalStats, pooled] : canalStats;
+
   const canalButtons = (
     <>
       {filas.canais.map((c) => {
@@ -280,6 +310,119 @@ export function FilasScreen() {
             valueSize={15}
           />
         </div>
+      </div>
+
+      {/* comparativo de canais + fila única (pooling) */}
+      <div
+        className="card"
+        style={{
+          background: "var(--panel)",
+          border: "1px solid var(--line)",
+          borderRadius: 12,
+          padding: 22,
+          marginTop: 16,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "baseline",
+            marginBottom: 16,
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>Comparativo de canais</h3>
+          <span style={{ fontFamily: MONO, fontSize: 10, color: "var(--faint)" }}>
+            ρ · Wq · Lq · W por canal
+          </span>
+        </div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${compareCols.length}, 1fr)`,
+            gap: 12,
+          }}
+        >
+          {compareCols.map((c) => {
+            const col = rhoCol(c.m.rho, c.m.unstable);
+            const chrome = c.combined;
+            const faint = chrome ? "#9A9EA8" : "var(--faint)";
+            return (
+              <div
+                key={c.label}
+                style={{
+                  border: `1px solid ${chrome ? "var(--chrome)" : "var(--line)"}`,
+                  borderRadius: 10,
+                  padding: "16px 16px 14px",
+                  background: chrome ? "var(--chrome)" : "var(--panel)",
+                  color: chrome ? "var(--chrome-fg)" : "inherit",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "baseline",
+                    gap: 8,
+                  }}
+                >
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>{c.label}</span>
+                  {chrome && (
+                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: ".08em", color: faint }}>
+                      FILA ÚNICA
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontFamily: MONO, fontSize: 10.5, color: chrome ? faint : "var(--graphite)", marginTop: 2 }}>
+                  s={c.s} · λ={c.lambda}/h · μ={c.mu}/h
+                </div>
+                <div
+                  style={{
+                    fontFamily: MONO,
+                    fontWeight: 600,
+                    fontSize: 38,
+                    lineHeight: 1,
+                    letterSpacing: "-.03em",
+                    color: col,
+                    margin: "14px 0 2px",
+                  }}
+                >
+                  {c.m.unstable ? "≥100" : (c.m.rho * 100).toFixed(1)}
+                  <span style={{ fontSize: 16, color: faint }}>%</span>
+                </div>
+                <div style={{ fontFamily: MONO, fontSize: 10, color: faint, marginBottom: 12 }}>
+                  ρ · utilização
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                  {[
+                    { k: "Wq", v: c.m.unstable ? "∞" : `${(c.m.Wq * 3600).toFixed(0)}s` },
+                    { k: "Lq", v: c.m.unstable ? "∞" : c.m.Lq.toFixed(2) },
+                    { k: "W", v: c.m.unstable ? "∞" : `${(c.m.W * 60).toFixed(1)}m` },
+                  ].map((x) => (
+                    <div key={x.k}>
+                      <div style={{ fontFamily: MONO, fontSize: 9, color: faint }}>{x.k}</div>
+                      <div style={{ fontFamily: MONO, fontSize: 14, fontWeight: 600, marginTop: 2 }}>
+                        {x.v}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {pooled && (
+          <p style={{ fontSize: 12, color: "var(--graphite)", lineHeight: 1.55, margin: "14px 0 0" }}>
+            O cenário <strong>Combinado</strong> junta os {filas.canais.length} canais numa{" "}
+            <strong>fila única com s={sTot}</strong> (pooling): a mesma demanda, mas qualquer
+            atendente serve qualquer cliente — o que reduz a espera vs. filas separadas. Por isso um
+            cálculo com s={sTot} dá ρ e Wq diferentes de tratar balcão e totem em separado. E como ρ
+            = λ/(s·μ), se o λ medido em campo for maior (ex.: ~54/h num levantamento manual), o ρ
+            sobe na mesma proporção.
+          </p>
+        )}
       </div>
 
       <div style={{ marginTop: 16 }}>
